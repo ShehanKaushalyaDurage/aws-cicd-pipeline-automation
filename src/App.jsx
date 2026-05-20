@@ -3,7 +3,7 @@ function App() {
     <div className="app-container">
       <header>
         <h1>Simple React App</h1>
-        <p>This project is ready to run with Vite.</p>
+        <p>Shehan Kaushalya</p>
       </header>
     </div>
   )
