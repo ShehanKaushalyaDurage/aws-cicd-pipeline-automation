@@ -3,7 +3,7 @@ function App() {
     <div className="app-container">
       <header>
         <h1>Simple React App</h1>
-        <p>Shehan Kaushalya</p>
+        <p>Automated CI/CD pipeline using GitHub Actions for building, testing, containerizing, and deploying applications to AWS infrastructure.</p>
       </header>
     </div>
   )
