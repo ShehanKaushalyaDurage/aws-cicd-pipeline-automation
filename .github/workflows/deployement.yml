@@ -1,7 +1,9 @@
-name: Deploy React App to AWS EC2 Instance
-
+name: Deployee React App to AWS Ec2 Instance
 on:
   push:
+    branches:
+      - main
+  pull_request:
     branches:
       - main
 
@@ -23,7 +25,7 @@ jobs:
       - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.EC2_SSH_KEY }}" | tr -d '\r' > ~/.ssh/id_rsa
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
 
