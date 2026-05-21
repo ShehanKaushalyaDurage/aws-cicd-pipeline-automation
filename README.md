@@ -1,150 +1,77 @@
-# AWS CI/CD Pipeline Automation
+# AWS CI/CD Pipeline Automation (React to EC2)
 
 ---
 
 ## 📖 Project Overview
 
-This repository contains a **complete CI/CD (Continuous Integration / Continuous Delivery) pipeline** that automatically builds, tests, and deploys a Laravel application to **AWS**.  It is designed to be a learning resource—think of it as a hands‑on classroom where you can see exactly how modern DevOps practices are wired together.
+This repository contains a simple **CI/CD (Continuous Integration / Continuous Delivery) pipeline** that automatically builds and deploys a **React** application (bundled with Vite) to an **AWS EC2 instance**. It uses **GitHub Actions** to automate the deployment process.
 
 ---
 
-## 🛠️ What is CI/CD?
+## 🚀 How This Project Automates Deployment
 
-- **Continuous Integration (CI)** – Every time a developer pushes code, the pipeline **instantly builds** the application, runs **unit & integration tests**, and checks code quality.
-- **Continuous Delivery (CD)** – After the CI stage succeeds, the same pipeline can **automatically deploy** the verified build to a test or production environment on AWS.
-- The goal is to **detect problems early**, keep the codebase **always releasable**, and **remove manual steps** that are error‑prone.
-
----
-
-## 🚀 How This Project Automates CI/CD to AWS
-
-1. **Source Control** – Code lives in a Git repository (GitHub, GitLab, Bitbucket…).
-2. **GitHub Actions / AWS CodePipeline** – The workflow runs on every `push` or `pull‑request`.
+1. **Source Control** – Code is hosted on GitHub.
+2. **GitHub Actions** – The workflow (`deployement.yml`) runs on every `push` or `pull_request` to the `main` branch.
 3. **Build Stage**
-   - Installs PHP, Composer, Node.js, and required extensions.
-   - Executes `composer install` and `npm install`.
-   - Runs `php artisan test` and `npm run test`.
-4. **Package Stage**
-   - Archives the Laravel application into a Docker image.
-   - Tags the image with the Git SHA.
-5. **Push Stage**
-   - Pushes the Docker image to **Amazon ECR** (Elastic Container Registry).
-6. **Deploy Stage**
-   - Updates an **Amazon ECS** service (or **Elastic Beanstalk**) to use the new image.
-   - Runs database migrations via `php artisan migrate`.
-   - Performs a health‑check to verify the new version is serving traffic.
+   - Sets up Node.js v20.
+   - Installs dependencies using `npm ci`.
+   - Builds the React application for production using `npm run build` (creating the `dist/` directory).
+4. **Deploy Stage**
+   - Configures SSH access using GitHub Secrets.
+   - Uses `rsync` to securely copy the compiled `dist/` folder to the specified path on your AWS EC2 instance.
+
+---
+
+## 🛠️ Tech Stack
+
+- **Frontend:** React 18, Vite
+- **CI/CD:** GitHub Actions
+- **Hosting:** AWS EC2 (Amazon Elastic Compute Cloud)
+- **Deployment Tool:** `rsync` over SSH
 
 ---
 
 ## 📦 Prerequisites
 
-| Tool | Version |
-|------|---------|
-| Docker | 24.x |
-| AWS CLI | 2.x |
-| Composer | 2.x |
-| Node.js | 20.x |
-| Terraform (optional) | 1.6.x |
-| Git | any recent version |
+To use this CI/CD pipeline, you will need:
 
-You also need an AWS account with the following permissions:
-- `ecr:*`
-- `ecs:*` (or `elasticbeanstalk:*` if you choose EB)
-- `iam:PassRole`
-- `cloudformation:*`
+1. An **AWS EC2 instance** running (e.g., Ubuntu/Amazon Linux) with a web server (like Nginx or Apache) configured to serve your application.
+2. The following **GitHub Secrets** configured in your repository settings (`Settings > Secrets and variables > Actions`):
+
+| Secret Name | Description | Example |
+|-------------|-------------|---------|
+| `EC2_HOST` | The public IP or domain of your EC2 instance | `54.210.xx.xx` |
+| `EC2_USER` | The SSH username for your instance | `ubuntu` or `ec2-user` |
+| `EC2_SSH_KEY` | The private SSH key (`.pem` or `.rsa`) to access the instance | `-----BEGIN RSA PRIVATE KEY-----...` |
+| `EC2_APP_PATH` | The destination path on the EC2 instance where files should be copied | `/var/www/html/my-app` |
 
 ---
 
-## 🏗️ Project Structure
-
-```
-aws-cicd-pipeline-automation/
-├─ .github/                # GitHub Actions workflow files
-│   └─ workflows/ci-cd.yml
-├─ ecs/                    # ECS task definition & service config
-├─ docker/                 # Dockerfile & compose files
-├─ scripts/                # Helper scripts (build, deploy, migrate)
-├─ src/                    # Your Laravel application code
-├─ terraform/              # (optional) Infra‑as‑code for ECR/ECS
-└─ README.md               # <-- This file
-```
-
----
-
-## ⚙️ Setup & Local Development
+## ⚙️ Local Development
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/your‑org/aws-cicd-pipeline-automation.git
+   git clone https://github.com/shehankaushalya/aws-cicd-pipeline-automation.git
    cd aws-cicd-pipeline-automation
    ```
-2. **Configure AWS credentials**
+2. **Install dependencies**
    ```bash
-   aws configure   # enter your Access Key, Secret, region
+   npm install
    ```
-3. **Build the Docker image locally**
+3. **Run the local development server**
    ```bash
-   docker build -t laravel-app:local .
+   npm run dev
    ```
-4. **Run the app**
+4. **Build for production manually**
    ```bash
-   docker compose up -d
+   npm run build
    ```
-5. **Run tests**
-   ```bash
-   ./scripts/run-tests.sh
-   ```
-
----
-
-## 📈 Running the CI/CD Pipeline Manually
-
-If you want to trigger the pipeline without a push:
-
-```bash
-# Push a temporary tag – GitHub Actions will pick it up
-git tag ci-demo-$(date +%s)
-git push origin ci-demo-$(date +%s)
-```
-
-Or invoke the scripts directly:
-
-```bash
-# Build & push Docker image to ECR
-./scripts/build-and-push.sh
-# Deploy the new image to ECS
-./scripts/deploy.sh
-```
-
----
-
-## 🎓 Teaching Points
-
-| Concept | What you’ll learn |
-|---------|-------------------|
-| **Infrastructure as Code** | Define ECR repo, ECS cluster, and IAM roles in Terraform.
-| **GitHub Actions syntax** | Write YAML jobs, matrix builds, and step caching.
-| **Docker multi‑stage builds** | Keep images slim by separating build & runtime layers.
-| **Zero‑downtime deployments** | Use ECS rolling updates and health‑checks.
-| **Secrets management** | Store AWS keys in GitHub secrets, reference them securely.
-| **Automated testing** | Integrate PHPUnit and Jest into the pipeline.
-
----
-
-## 📄 License
-
-This project is licensed under the **MIT License** – feel free to fork, modify, and use it in your own learning labs.
 
 ---
 
 ## ✉️ Contact & Contributions
 
 - **Author:** Shehan Kaushalya Durage
-- **Email:** <shehan@example.com>
 - **GitHub:** https://github.com/shehankaushalya/aws-cicd-pipeline-automation
 
 Contributions are welcome! Open an issue or submit a PR.
-
----
-
-*Happy coding – may your pipelines always be green!*
